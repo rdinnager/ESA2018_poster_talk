@@ -75,3 +75,38 @@ full_params <- list(K_parms = c(hub_and_spoke_K, c_var = 0.02),
 
 sim_hub_and_spoke_1 <- sim_radiation(full_params)
 plot(sim_hub_and_spoke_1)
+
+### Now let's try a random peaks landscape
+
+test_params <- generate_landscape(1000, 5000, num_peaks = 200,
+                                  h_to_sig_ratio = 0.5,
+                                  P_min_max = c(0.75, 1.5),
+                                  a = 0.01,
+                                  dirichlet_param = 10)
+
+nichefillr:::plot_K_contour(test_params, x_lims = c(-20, 20), y_lims = c(-20, 20),
+                            contour_res = 200, bins = 12)
+
+
+
+full_params <- list(K_parms = c(test_params, c_var = 0),
+                    a_parms = list(gamma_i = c(1, 1),
+                                   D_i = c(1, 1),
+                                   C = 1),
+                    macro_parms = list(b_rate = 0.001,
+                                       init_traits = c(0.1, 0.1),
+                                       e_var = c(0.1, 0.1),
+                                       init_Ns = c(0.1, 0.1),
+                                       init_br = 10,
+                                       check_extinct = 0.005,
+                                       tot_time = 100000,
+                                       V_gi = c(0.1, 0.1),
+                                       m = 2L, d = 2L,
+                                       save_tree = TRUE,
+                                       save_tree_interval = 100,
+                                       progress = TRUE,
+                                       mult = 2))
+
+test_sim <- sim_radiation(full_params)
+plot(test_sim)
+sim_animation(test_sim, file_name = "test_sim_big", view = FALSE)
