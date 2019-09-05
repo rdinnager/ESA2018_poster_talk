@@ -128,22 +128,14 @@ sim_animation(test_sim, file_name = "test_sim_big", view = FALSE)
 
 ######### generate params ##############
 
-n_runs <- 2000
+n_runs <- 4000
 
 gen_params <- function(d = 2) {
   #comp_vol <- rexp(1, 1/40)
-  calc_sigma <- function(vol, d) {
-    (vol / ((2*pi)^(d/2)))^(1/d)
-  }
   
-  calc_vol <- function(sigg, d) {
-    ((2*pi)^(d/2))*(sigg^d)
-  }
-  
-  comp <- rexp(1, 1/1.25)
-  vol <- calc_vol(comp, d = 2)
-  gamma <- calc_sigma(vol, d = d)
-  test_params <- generate_landscape2(2000, 10, num_peaks = 50,
+  comp_1d <- rexp(1, 1/1.25)
+  gamma <- comp_1d * (d ^ (-0.5))
+  test_params <- generate_landscape2(1000, 10, num_peaks = 50,
                                      h_to_sig_ratio = 2,
                                      P_min_max = c(0.75, 1.5),
                                      a = 0.01,
@@ -174,7 +166,7 @@ gen_params <- function(d = 2) {
 library(pbapply)
 library(parallel)
 
-ds <- sample(3, n_runs, replace = TRUE, prob = c(0.5, 0.3, 0.2)) + 1
+ds <- sample(4, n_runs, replace = TRUE) + 1
 
 #test <- gen_params(ds[1])
 
@@ -184,7 +176,7 @@ clusterEvalQ(cl, {library(nichefillr)})
 param_sets <- pblapply(ds, gen_params, cl = cl)
 
 library(readr)
-write_rds(param_sets, "results/params3/param_sets.rds")
+write_rds(param_sets, "results/params4/param_sets.rds")
 
 stopCluster(cl)
 
@@ -217,7 +209,7 @@ library(readr)
 library(ape)
 library(FD)
 
-mod_files <- list.files("results/sims2", full.names = TRUE)
+mod_files <- list.files("results/sims3", full.names = TRUE)
 
 # mod_file <- mod_files[2]
 extract_div_data <- function(mod_file) {
@@ -249,7 +241,7 @@ extract_div_data <- function(mod_file) {
 library(pbapply)
 
 sim_dat <- pblapply(mod_files, extract_div_data)
-write_rds(sim_dat, "results/sim_dat2.rds")
+write_rds(sim_dat, "results/sim_dat3.rds")
 
 
 sim_dat <- read_rds("results/sim_dat2.rds")
@@ -282,7 +274,19 @@ dat_df <- dat_df %>%
 ggplot(dat_df, aes(comp_vol, SR)) +
   geom_point(aes(colour = as.factor(d))) +
   geom_smooth(aes(colour = as.factor(d), fill = as.factor(d))) +
-  scale_x_sqrt() +
+  scale_x_continuous(trans = "log1p", breaks = c(0, 1, 2, 5, 10, 50, 100, 200, 400, 600)) +
+  scale_color_brewer(name = "Dimensionality", palette = "Dark2") +
+  scale_fill_brewer(name = "Dimensionality", palette = "Dark2") +
+  xlab(expression(paste("Competition Strength (", gamma, ")"))) +
+  ylab("Equilibrium Species Richness") +
+  theme_minimal() +
+  theme(legend.position = c(0.75, 0.75),
+        panel.grid = element_blank())
+
+ggplot(dat_df, aes(gamma, SR)) +
+  geom_point(aes(colour = as.factor(d))) +
+  geom_smooth(aes(colour = as.factor(d), fill = as.factor(d))) +
+  scale_x_continuous(trans = "log1p", breaks = c(0, 0.35, 0.5, 1, 2, 4, 6)) +
   scale_color_brewer(name = "Dimensionality", palette = "Dark2") +
   scale_fill_brewer(name = "Dimensionality", palette = "Dark2") +
   xlab(expression(paste("Competition Strength (", gamma, ")"))) +
